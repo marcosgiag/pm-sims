@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LawnMaster+ Pro · Simulador PM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080d08;
+  --surface: #0e160e;
+  --card: #141e14;
+  --card-hover: #1a281a;
+  --border: #1e2e1e;
+  --border-bright: #2e4a2e;
+  --text: #ddeedd;
+  --text-muted: #7a9a7a;
+  --text-dim: #3e5e3e;
+  --green: #4ade80;
+  --green-dim: #16a34a;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --blue: #60a5fa;
+  --font-h: 'Syne', sans-serif;
+  --font-b: 'DM Sans', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-b);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse 70% 40% at 50% -10%, rgba(74,222,128,.06) 0%, transparent 55%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* TOP BAR */
+.topbar {
+  padding: 18px 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.logo {
+  font-family: var(--font-h);
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--green);
+  letter-spacing: -.4px;
+}
+.logo span { color: var(--text-muted); font-weight: 600; }
+.act-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-weight: 300;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  margin-left: auto;
+}
+.progress-dots { display: flex; gap: 6px; align-items: center; }
+.pdot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: all .3s;
+}
+.pdot.active { background: var(--green); box-shadow: 0 0 8px rgba(74,222,128,.5); }
+.pdot.done { background: var(--green-dim); }
+
+/* ACTS */
+.act { display: none; padding: 40px 0 80px; animation: fadeUp .4s ease; }
+.act.active { display: block; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* TYPOGRAPHY */
+h1 {
+  font-family: var(--font-h);
+  font-size: clamp(28px, 5vw, 44px);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -1.5px;
+}
+h1 .ac { color: var(--green); }
+h2 { font-family: var(--font-h); font-size: 20px; font-weight: 700; letter-spacing: -.4px; }
+h3 { font-family: var(--font-h); font-size: 15px; font-weight: 700; letter-spacing: -.3px; }
+p { font-size: 14px; line-height: 1.65; color: var(--text-muted); font-weight: 300; }
+p strong { color: var(--text); font-weight: 500; }
+.lead { font-size: 16px; line-height: 1.6; color: var(--text); font-weight: 300; max-width: 620px; }
+.g8 { margin-top: 8px; }
+.g12 { margin-top: 12px; }
+.g16 { margin-top: 16px; }
+.g24 { margin-top: 24px; }
+.g32 { margin-top: 32px; }
+.g40 { margin-top: 40px; }
+
+/* TAG */
+.tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 3px;
+  background: rgba(74,222,128,.08);
+  color: var(--green);
+  border: 1px solid rgba(74,222,128,.18);
+}
+
+/* BUTTON */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 22px;
+  background: var(--green);
+  color: #030a03;
+  font-family: var(--font-b);
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all .2s;
+  letter-spacing: .02em;
+}
+.btn:hover { background: #6ee7a0; transform: translateY(-1px); box-shadow: 0 4px 18px rgba(74,222,128,.28); }
+.btn:active { transform: translateY(0); }
+.btn.sec {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.btn.sec:hover { border-color: var(--border-bright); color: var(--text); background: var(--card); box-shadow: none; transform: none; }
+
+/* MENTOR */
+.mentor {
+  display: flex;
+  gap: 13px;
+  padding: 14px 18px;
+  background: rgba(74,222,128,.04);
+  border: 1px solid rgba(74,222,128,.12);
+  border-left: 3px solid var(--green);
+  border-radius: 8px;
+  margin: 22px 0;
+}
+.mentor-av {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg,#16a34a,#4ade80);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.mentor-name { font-size: 11px; font-weight: 500; color: var(--green); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+.mentor p { font-size: 13px; color: var(--text); margin: 0; }
+
+/* BRIEF GRID */
+.brief-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+  margin-top: 20px;
+}
+.brief-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  transition: all .2s;
+}
+.brief-card:hover { border-color: var(--border-bright); background: var(--card-hover); }
+.brief-icon { font-size: 22px; margin-bottom: 8px; }
+.brief-title { font-family: var(--font-h); font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 5px; }
+.brief-card p { font-size: 12px; line-height: 1.5; }
+
+/* WP CARD */
+.wp-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 24px;
+}
+.wp-header {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.wp-icon { font-size: 26px; }
+.wp-prog { font-size: 11px; color: var(--text-dim); font-weight: 300; margin-left: auto; }
+.wp-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+.wp-body { padding: 18px 22px; }
+.wp-challenge {
+  font-size: 12px;
+  color: var(--amber);
+  padding: 9px 13px;
+  background: rgba(251,191,36,.05);
+  border: 1px solid rgba(251,191,36,.14);
+  border-radius: 6px;
+  margin: 10px 0 18px;
+  line-height: 1.5;
+}
+.wp-challenge::before { content: '⚠ '; }
+
+/* TECHNIQUES */
+.tech-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+@media (max-width: 480px) { .tech-grid { grid-template-columns: 1fr; } }
+.tech-opt {
+  padding: 13px 15px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all .18s;
+  background: var(--surface);
+}
+.tech-opt:hover { border-color: var(--border-bright); background: var(--card-hover); }
+.tech-opt.sel-ok  { border-color: var(--green); background: rgba(74,222,128,.07); }
+.tech-opt.sel-par { border-color: var(--amber); background: rgba(251,191,36,.05); }
+.tech-opt.sel-bad { border-color: var(--red);   background: rgba(248,113,113,.05); }
+.tech-opt.show-ok { border-color: var(--green); background: rgba(74,222,128,.04); }
+.tech-name { font-family: var(--font-h); font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.tech-hint { font-size: 11px; color: var(--text-dim); }
+
+.fb-box {
+  margin-top: 14px;
+  padding: 12px 15px;
+  border-radius: 7px;
+  font-size: 13px;
+  line-height: 1.55;
+  font-weight: 300;
+  display: none;
+}
+.fb-box.vis { display: block; }
+.fb-box.ok  { background: rgba(74,222,128,.07); border: 1px solid rgba(74,222,128,.2); color: #86efac; }
+.fb-box.par { background: rgba(251,191,36,.07); border: 1px solid rgba(251,191,36,.2); color: #fde68a; }
+.fb-box.bad { background: rgba(248,113,113,.07); border: 1px solid rgba(248,113,113,.2); color: #fca5a5; }
+
+.next-wrap { margin-top: 18px; display: none; }
+.next-wrap.vis { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.score-note { font-size: 12px; font-weight: 400; }
+
+/* SLIDERS */
+.slider-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 24px; }
+@media (max-width: 600px) { .slider-panels { grid-template-columns: 1fr; } }
+.sl-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+.sl-panel-head { display: flex; align-items: center; gap: 9px; margin-bottom: 16px; }
+.sl-panel-head .em { font-size: 22px; }
+.sl-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+.sl-row { margin-bottom: 13px; }
+.sl-lbl { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.sl-lname { font-size: 12px; color: var(--text-muted); }
+.sl-lname strong { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; }
+.sl-val { font-family: var(--font-h); font-size: 14px; font-weight: 700; color: var(--text); }
+
+input[type="range"] {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--border);
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 15px; height: 15px;
+  border-radius: 50%;
+  background: var(--green);
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(74,222,128,.45);
+  transition: transform .15s;
+}
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+.res-box {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.res-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+.res-row:last-child { border-bottom: none; }
+.res-lbl { font-size: 12px; color: var(--text-muted); }
+.res-formula { font-size: 10px; color: var(--text-dim); margin-top: 1px; }
+.res-num { font-family: var(--font-h); font-size: 17px; font-weight: 700; color: var(--green); }
+.res-num.b { color: var(--blue); font-size: 15px; }
+
+.insight {
+  margin-top: 10px;
+  padding: 9px 12px;
+  background: rgba(96,165,250,.05);
+  border: 1px solid rgba(96,165,250,.13);
+  border-radius: 6px;
+  font-size: 11px;
+  color: #93c5fd;
+  line-height: 1.5;
+}
+
+/* BUDGET */
+.score-row {
+  display: flex;
+  gap: 20px;
+  padding: 18px 22px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.sc-item { text-align: center; }
+.sc-big { font-family: var(--font-h); font-size: 34px; font-weight: 800; line-height: 1; }
+.sc-big.g { color: var(--green); }
+.sc-big.a { color: var(--amber); }
+.sc-big.r { color: var(--red); }
+.sc-desc { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+.sc-msg { font-size: 13px; color: var(--text-muted); line-height: 1.5; max-width: 200px; font-weight: 300; margin-left: auto; }
+
+.budget-tbl { width: 100%; border-collapse: collapse; margin-top: 22px; }
+.budget-tbl th {
+  font-family: var(--font-h);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  color: var(--text-dim);
+  padding: 0 14px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.budget-tbl th:last-child { text-align: right; }
+.budget-tbl td { padding: 13px 14px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+.budget-tbl tr:last-child td { border-bottom: none; }
+.tbl-icon { font-size: 17px; }
+.tbl-name { font-weight: 500; color: var(--text); }
+.tbl-name small { display: block; font-weight: 300; font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+.tbl-tech { font-size: 12px; color: var(--text-muted); }
+.tbl-amt { text-align: right; font-family: var(--font-h); font-size: 14px; font-weight: 700; color: var(--text); }
+.tbl-total td { border-top: 2px solid var(--border-bright); border-bottom: none; padding-top: 14px; }
+.tbl-total .tbl-name { font-family: var(--font-h); font-weight: 700; font-size: 15px; }
+.tbl-total .tbl-amt { color: var(--green); font-size: 19px; }
+
+.range-card {
+  margin-top: 22px;
+  padding: 18px 22px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.range-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+@media (max-width: 480px) { .range-grid { grid-template-columns: 1fr; } }
+.range-box { padding: 14px; border-radius: 8px; border: 1px solid var(--border); }
+.range-box.early { background: rgba(251,191,36,.04); border-color: rgba(251,191,36,.18); }
+.range-box.late  { background: rgba(74,222,128,.04); border-color: rgba(74,222,128,.18); }
+.range-lbl { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 7px; }
+.range-box.early .range-lbl { color: var(--amber); }
+.range-box.late  .range-lbl { color: var(--green); }
+.range-nums { font-family: var(--font-h); font-size: 18px; font-weight: 800; color: var(--text); }
+.range-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+.reflect-box {
+  margin-top: 22px;
+  padding: 18px 22px;
+  background: rgba(74,222,128,.03);
+  border: 1px solid rgba(74,222,128,.12);
+  border-radius: 12px;
+}
+.reflect-title { font-family: var(--font-h); font-size: 14px; font-weight: 700; color: var(--green); margin-bottom: 12px; }
+.reflect-q {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 300;
+  padding-left: 13px;
+  border-left: 2px solid var(--green-dim);
+  margin-bottom: 10px;
+  line-height: 1.55;
+}
+.reflect-q:last-child { margin-bottom: 0; }
+
+.info-blue {
+  padding: 14px 18px;
+  background: rgba(96,165,250,.05);
+  border: 1px solid rgba(96,165,250,.14);
+  border-radius: 8px;
+}
+.info-blue p { font-size: 13px; color: #93c5fd; margin: 0; }
+.info-blue p strong { color: #bfdbfe; }
+
+.exp-box {
+  margin-top: 22px;
+  padding: 14px 18px;
+  background: rgba(251,191,36,.04);
+  border: 1px solid rgba(251,191,36,.14);
+  border-radius: 8px;
+}
+.exp-box p { font-size: 13px; color: #fde68a; margin: 0; }
+.exp-box p strong { color: var(--amber); }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">LawnMaster+<span> Pro</span> · PM Sim</div>
+  <div class="act-label" id="act-label">Acto 1 de 4</div>
+  <div class="progress-dots">
+    <div class="pdot active" id="dot-1"></div>
+    <div class="pdot" id="dot-2"></div>
+    <div class="pdot" id="dot-3"></div>
+    <div class="pdot" id="dot-4"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     ACT 1 — BRIEFING
+══════════════════════════════════════ -->
+<div class="act active" id="act-1">
+  <div class="g40"></div>
+  <div class="tag">Misión de la semana</div>
+  <div class="g12"></div>
+  <h1>Sos el <span class="ac">Project Manager</span><br>de LawnMaster+ Pro.</h1>
+  <div class="g16"></div>
+  <p class="lead">AgriTech SA fabricó un cortacésped autónomo que ya funciona. Ahora quieren <strong>la app móvil</strong> para que los usuarios lo controlen desde el teléfono. Vos sos el PM recién designado.</p>
+
+  <div class="mentor">
+    <div class="mentor-av">👩</div>
+    <div>
+      <div class="mentor-name">Ana · PM Senior</div>
+      <p>El directorio quiere el presupuesto el lunes. Antes de poner un número, entendé <em>qué hay que hacer</em>. No arranques con los costos sin leer el brief.</p>
+    </div>
+  </div>
+
+  <h2>El proyecto en 6 paquetes de trabajo</h2>
+  <div class="g8"></div>
+  <p>Todo lo que tenés que presupuestar, incluyendo lo que no genera código pero sí costo real:</p>
+
+  <div class="brief-grid">
+    <div class="brief-card">
+      <div class="brief-icon">📱</div>
+      <div class="brief-title">App Móvil</div>
+      <p>iOS + Android. Programar cortes, mapa de zonas del jardín, alertas en tiempo real, historial. El equipo usa GitHub Copilot.</p>
+    </div>
+    <div class="brief-card">
+      <div class="brief-icon">⚙️</div>
+      <div class="brief-title">Backend & APIs</div>
+      <p>Lógica de negocio, base de datos de usuarios y cortes, API REST para la app y para la máquina física. Alcance bastante bien definido.</p>
+    </div>
+    <div class="brief-card">
+      <div class="brief-icon">☁️</div>
+      <div class="brief-title">Infraestructura Cloud</div>
+      <p>Instancias AWS, RDS, S3, CDN, monitoreo. Precios públicos disponibles en la calculadora de AWS.</p>
+    </div>
+    <div class="brief-card">
+      <div class="brief-icon">🔌</div>
+      <div class="brief-title">Integración IoT</div>
+      <p>Protocolo MQTT + WiFi/4G entre la app y la cortadora. Comandos en tiempo real. Primera vez que el equipo trabaja con hardware.</p>
+    </div>
+    <div class="brief-card">
+      <div class="brief-icon">🔐</div>
+      <div class="brief-title">Capacitación Ciberseguridad</div>
+      <p>8 developers necesitan formación en secure coding antes de arrancar. Empresa externa dicta el curso. Requisito del área de seguridad corporativa.</p>
+    </div>
+    <div class="brief-card">
+      <div class="brief-icon">🔍</div>
+      <div class="brief-title">Auditoría de Seguridad</div>
+      <p>Pentesting + revisión de código antes del lanzamiento. Empresa independiente. Requisito contractual del cliente.</p>
+    </div>
+  </div>
+
+  <div class="g24"></div>
+  <div class="info-blue">
+    <p><strong>Pregunta para arrancar:</strong> Si hoy cualquier dev puede escribir código con IA, ¿por qué seguimos teniendo incertidumbre en el estimado? ¿Qué paquetes te parecen más predecibles y cuáles más riesgosos?</p>
+  </div>
+
+  <div class="g32"></div>
+  <button class="btn" onclick="goToAct(2)">Entendido — ¿Cómo lo estimamos? →</button>
+</div>
+
+<!-- ══════════════════════════════════════
+     ACT 2 — TECHNIQUE SELECTION
+══════════════════════════════════════ -->
+<div class="act" id="act-2">
+  <div class="g40"></div>
+  <div class="tag">Acto 2</div>
+  <div class="g12"></div>
+  <h1>Elegí la técnica<br><span class="ac">de estimación.</span></h1>
+  <div class="g16"></div>
+  <p class="lead">Para cada paquete de trabajo, elegí la técnica más adecuada. <strong>No hay una única respuesta correcta</strong> — pero sí hay técnicas que aplican mejor según el contexto.</p>
+
+  <div class="mentor">
+    <div class="mentor-av">👩</div>
+    <div>
+      <div class="mentor-name">Ana · PM Senior</div>
+      <p>La técnica depende de cuánta información tenés, cuánta incertidumbre hay, y qué tan rápido necesitás el número. No hay que usar siempre la misma.</p>
+    </div>
+  </div>
+
+  <div id="wp-container"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     ACT 3 — THREE POINT CALC
+══════════════════════════════════════ -->
+<div class="act" id="act-3">
+  <div class="g40"></div>
+  <div class="tag">Acto 3</div>
+  <div class="g12"></div>
+  <h1>Calculá los<br><span class="ac">estimados.</span></h1>
+  <div class="g16"></div>
+  <p class="lead">Los dos paquetes con mayor incertidumbre se estiman con <strong>3 Puntos</strong>. Mové los sliders y observá cómo Beta y Triangular responden distinto.</p>
+
+  <div class="mentor">
+    <div class="mentor-av">👩</div>
+    <div>
+      <div class="mentor-name">Ana · PM Senior</div>
+      <p>Beta le da cuatro veces más peso al valor "más probable". Triangular reparte igual entre los tres. Probá llevar el Pesimista al máximo y fijate cuánto divergen.</p>
+    </div>
+  </div>
+
+  <div class="slider-panels">
+    <!-- APP MÓVIL -->
+    <div class="sl-panel">
+      <div class="sl-panel-head">
+        <span class="em">📱</span>
+        <div>
+          <h3>App Móvil</h3>
+          <div class="sl-sub">Alta incertidumbre · IoT primera vez</div>
+        </div>
+      </div>
+      <div class="sl-row">
+        <div class="sl-lbl">
+          <span class="sl-lname"><strong>O</strong> Optimista (USD k)</span>
+          <span class="sl-val" id="app-o-v">40</span>
+        </div>
+        <input type="range" id="app-o" min="10" max="120" value="40" oninput="calc('app')">
+      </div>
+      <div class="sl-row">
+        <div class="sl-lbl">
+          <span class="sl-lname"><strong>M</strong> Más probable (USD k)</span>
+          <span class="sl-val" id="app-m-v">80</span>
+        </div>
+        <input type="range" id="app-m" min="20" max="250" value="80" oninput="calc('app')">
+      </div>
+      <div class="sl-row">
+        <div class="sl-lbl">
+          <span class="sl-lname"><strong>P</strong> Pesimista (USD k)</span>
+          <span class="sl-val" id="app-p-v">180</span>
+        </div>
+        <input type="range" id="app-p" min="50" max="400" value="180" oninput="calc('app')">
+      </div>
+      <div class="res-box">
+        <div class="res-row">
+          <div>
+            <div class="res-lbl">Beta (PMBOK)</div>
+            <div class="res-formula">(O + 4M + P) / 6</div>
+          </div>
+          <div class="res-num" id="app-beta">$90.0k</div>
+        </div>
+        <div class="res-row">
+          <div>
+            <div class="res-lbl">Triangular</div>
+            <div class="res-formula">(O + M + P) / 3</div>
+          </div>
+          <div class="res-num b" id="app-tri">$100.0k</div>
+        </div>
+      </div>
+      <div class="insight" id="app-ins">Beta da $90k · Triangular da $100k. Beta pondera el "más probable" (×4) y converge hacia M.</div>
+    </div>
+
+    <!-- IOT -->
+    <div class="sl-panel">
+      <div class="sl-panel-head">
+        <span class="em">🔌</span>
+        <div>
+          <h3>Integración IoT</h3>
+          <div class="sl-sub">Muy alta incertidumbre · Tecnología nueva</div>
+        </div>
+      </div>
+      <div class="sl-row">
+        <div class="sl-lbl">
+          <span class="sl-lname"><strong>O</strong> Optimista (USD k)</span>
+          <span class="sl-val" id="iot-o-v">20</span>
+        </div>
+        <input type="range" id="iot-o" min="5" max="80" value="20" oninput="calc('iot')">
+      </div>
+      <div class="sl-row">
+        <div class="sl-lbl">
+          <span class="sl-lname"><strong>M</strong> Más probable (USD k)</span>
+          <span class="sl-val" id="iot-m-v">50</span>
+        </div>
+        <input type="range" id="iot-m" min="10" max="180" value="50" oninput="calc('iot')">
+      </div>
+      <div class="sl-row">
+        <div class="sl-lbl">
+          <span class="sl-lname"><strong>P</strong> Pesimista (USD k)</span>
+          <span class="sl-val" id="iot-p-v">150</span>
+        </div>
+        <input type="range" id="iot-p" min="25" max="350" value="150" oninput="calc('iot')">
+      </div>
+      <div class="res-box">
+        <div class="res-row">
+          <div>
+            <div class="res-lbl">Beta (PMBOK)</div>
+            <div class="res-formula">(O + 4M + P) / 6</div>
+          </div>
+          <div class="res-num" id="iot-beta">$61.7k</div>
+        </div>
+        <div class="res-row">
+          <div>
+            <div class="res-lbl">Triangular</div>
+            <div class="res-formula">(O + M + P) / 3</div>
+          </div>
+          <div class="res-num b" id="iot-tri">$73.3k</div>
+        </div>
+      </div>
+      <div class="insight" id="iot-ins">Spread amplio (20–150). Con alta incertidumbre, la diferencia entre Beta y Triangular se vuelve más relevante.</div>
+    </div>
+  </div>
+
+  <div class="g16"></div>
+  <div class="exp-box">
+    <p><strong>Experimento:</strong> Llevá el Pesimista de IoT al máximo. ¿Cuánto se mueve Beta vs Triangular? ¿Cuál le presentarías al directorio y por qué? ¿Qué impacto tiene eso en la confianza del cliente?</p>
+  </div>
+
+  <div class="g32"></div>
+  <button class="btn" onclick="goToAct(4)">Ver el presupuesto completo →</button>
+</div>
+
+<!-- ══════════════════════════════════════
+     ACT 4 — BUDGET
+══════════════════════════════════════ -->
+<div class="act" id="act-4">
+  <div class="g40"></div>
+  <div class="tag">Acto 4</div>
+  <div class="g12"></div>
+  <h1>El presupuesto<br><span class="ac">del proyecto.</span></h1>
+  <div class="g16"></div>
+  <p class="lead">Tus estimados más los cuatro paquetes calculados con otras técnicas. Esto es lo que llevarías al directorio.</p>
+
+  <div class="g24"></div>
+  <div class="score-row" id="score-row"></div>
+  <table class="budget-tbl" id="budget-tbl"></table>
+
+  <div class="range-card">
+    <h3>Rango de confianza</h3>
+    <p class="g8" style="font-size:12px;">El mismo número puntual tiene rangos muy distintos según en qué etapa del proyecto estés estimando.</p>
+    <div class="range-grid">
+      <div class="range-box early">
+        <div class="range-lbl">📍 Etapa temprana · Orden de magnitud</div>
+        <div class="range-nums" id="range-early">–</div>
+        <div class="range-sub">Rango típico: −25% / +75%</div>
+      </div>
+      <div class="range-box late">
+        <div class="range-lbl">✅ Etapa avanzada · Estimación definitiva</div>
+        <div class="range-nums" id="range-late">–</div>
+        <div class="range-sub">Rango típico: −5% / +10%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="reflect-box">
+    <div class="reflect-title">💬 Para pensar antes de la clase</div>
+    <p class="reflect-q">¿Le presentarías al directorio un número puntual o un rango? ¿Por qué? ¿Qué riesgos tiene cada opción?</p>
+    <p class="reflect-q">El cliente pide bajar el presupuesto un 20%. ¿Qué paquetes de trabajo revisarías primero y por qué?</p>
+    <p class="reflect-q">En dos semanas el equipo tiene una prueba de concepto del IoT. ¿Cómo cambia tu estimado después de verla?</p>
+    <p class="reflect-q">Si hoy cualquier dev puede programar con IA, ¿por qué sigue habiendo tanta incertidumbre en la App y el IoT?</p>
+  </div>
+
+  <div class="g32"></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <button class="btn" onclick="restart()">↺ Empezar de nuevo</button>
+    <button class="btn sec" onclick="goToAct(2)">← Revisar técnicas</button>
+    <button class="btn sec" onclick="goToAct(3)">← Ajustar estimados</button>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+// ─── DATA ──────────────────────────────────────────
+const WPS = [
+  {
+    id:'app', icon:'📱', title:'App Móvil', sub:'iOS + Android · GitHub Copilot',
+    desc:'Interfaz para programar cortes, ver el mapa del jardín, recibir alertas y controlar la máquina. El equipo tiene buenos devs y va a usar IA para escribir el código.',
+    challenge:'Nunca integraron una app con hardware IoT. No hay proyectos históricos directamente comparables.',
+    correct:'tres',
+    opts:[
+      { id:'analogia', lbl:'Análoga',          hint:'Basada en proyectos pasados similares', ok:false, par:true,
+        fb:'Parcialmente válida, pero ¿qué proyecto anterior es realmente comparable? Una app sin IoT no tiene la misma complejidad. Si la usás, necesitás ajustar mucho y documentar las diferencias.' },
+      { id:'param',    lbl:'Paramétrica',       hint:'Precio por unidad × cantidad', ok:false, par:false,
+        fb:'¿Cuál sería la "unidad"? ¿Features? El problema es que no todas cuestan igual. Esta técnica funciona cuando tenés una unidad de medida consistente, como instancias de servidor o personas en un curso.' },
+      { id:'tres',     lbl:'3 Puntos (Beta)',   hint:'Optimista, probable, pesimista', ok:true,  par:false,
+        fb:'✅ Excelente. Alta incertidumbre + primera vez con IoT = 3 Puntos. La fórmula Beta le da cuatro veces más peso al valor más probable y captura el riesgo con un rango explícito. En el Acto 3 vas a calcular este número.' },
+      { id:'bottom',   lbl:'Bottom-up',         hint:'Descomponer en partes y sumar', ok:false, par:true,
+        fb:'Válida, pero costosa en tiempo y sólo funciona si el alcance está muy bien definido. Al inicio del proyecto todavía no lo tenés. Mejor combinarla con 3 Puntos cuando el alcance madure.' }
+    ]
+  },
+  {
+    id:'backend', icon:'⚙️', title:'Backend & APIs', sub:'Servidor · BD · REST API',
+    desc:'Lógica de negocio, base de datos de usuarios y sesiones, endpoints para la app y para el hardware. El equipo tiene experiencia con Node.js y puede descomponer el trabajo en módulos claros.',
+    challenge:'El alcance está bastante definido. Se puede descomponer en endpoints, módulos y tablas de base de datos.',
+    correct:'bottom',
+    opts:[
+      { id:'analogia', lbl:'Análoga',          hint:'Basada en proyectos pasados similares', ok:false, par:true,
+        fb:'Podría funcionar si tenés un backend similar en el historial. Pero dado que el alcance está definido, podés hacer algo más preciso sin demasiado esfuerzo extra.' },
+      { id:'param',    lbl:'Paramétrica',       hint:'Precio por unidad × cantidad', ok:false, par:true,
+        fb:'Posible si contás endpoints como unidad. Ojo: asumís que todos cuestan igual, lo cual rara vez es cierto. Funciona como primera aproximación rápida.' },
+      { id:'tres',     lbl:'3 Puntos (Beta)',   hint:'Optimista, probable, pesimista', ok:false, par:true,
+        fb:'También válida para capturar incertidumbre residual. Pero con alcance claro y equipo experimentado, Bottom-up da más precisión con parecido esfuerzo.' },
+      { id:'bottom',   lbl:'Bottom-up',         hint:'Descomponer en partes y sumar', ok:true,  par:false,
+        fb:'✅ Ideal acá. Alcance claro + equipo con experiencia = momento perfecto para Bottom-up. Descomponés en módulos, estimás cada uno, sumás. Más trabajo que las otras, pero bastante más confiable.' }
+    ]
+  },
+  {
+    id:'cloud', icon:'☁️', title:'Infraestructura Cloud', sub:'AWS · RDS · S3 · CDN',
+    desc:'Servidores, base de datos gestionada, almacenamiento de imágenes del jardín, CDN y monitoreo. Todo en AWS con precios públicos disponibles en su calculadora oficial.',
+    challenge:'Los precios de AWS son públicos y predecibles. Sabés cuántos usuarios espera el cliente en el primer año.',
+    correct:'param',
+    opts:[
+      { id:'analogia', lbl:'Análoga',          hint:'Basada en proyectos pasados similares', ok:false, par:true,
+        fb:'Funciona si tenés una app de volumen similar en el historial. Pero teniendo los precios públicos de AWS disponibles, ¿para qué conformarte con una analogía imprecisa?' },
+      { id:'param',    lbl:'Paramétrica',       hint:'Precio por unidad × cantidad', ok:true,  par:false,
+        fb:'✅ Perfecto. EC2 × precio/mes, RDS × GB, S3 × TB. Todo tiene precio conocido. Este es el caso textbook de estimación paramétrica: unidad clara, precio estable, escala predecible.' },
+      { id:'tres',     lbl:'3 Puntos (Beta)',   hint:'Optimista, probable, pesimista', ok:false, par:true,
+        fb:'Válida si hay mucha incertidumbre en el volumen de usuarios. Pero los precios de cloud son conocidos — la incertidumbre está en la escala, no en el precio unitario. Paramétrica + escenarios de crecimiento es más limpio.' },
+      { id:'bottom',   lbl:'Bottom-up',         hint:'Descomponer en partes y sumar', ok:false, par:false,
+        fb:'Bottom-up para infra cloud es, en el fondo, paramétrica con otro nombre. Cuando descomponés en instancias y servicios, estás haciendo p×q. Usá directamente la calculadora de AWS.' }
+    ]
+  },
+  {
+    id:'iot', icon:'🔌', title:'Integración IoT', sub:'MQTT · WiFi/4G · Tiempo real',
+    desc:'Protocolo de comunicación bidireccional entre la app y la cortadora. Comandos en tiempo real, telemetría de estado, manejo de desconexiones y reconexiones.',
+    challenge:'El equipo nunca trabajó con MQTT ni con hardware embebido. Alta incertidumbre técnica. Pueden surgir problemas desconocidos.',
+    correct:'tres',
+    opts:[
+      { id:'analogia', lbl:'Análoga',          hint:'Basada en proyectos pasados similares', ok:false, par:false,
+        fb:'¿Tenés proyectos de IoT con hardware similar en el historial? Probablemente no. Sin una analogía sólida, este método introduce más ruido que señal.' },
+      { id:'param',    lbl:'Paramétrica',       hint:'Precio por unidad × cantidad', ok:false, par:false,
+        fb:'¿Cuál es la unidad en IoT experimental? No hay precio por "mensaje MQTT" ni por "comando desconocido". Esta técnica no aplica cuando el trabajo es exploratorio.' },
+      { id:'tres',     lbl:'3 Puntos (Beta)',   hint:'Optimista, probable, pesimista', ok:true,  par:false,
+        fb:'✅ La opción más honesta para trabajo experimental. Con 3 Puntos reconocés explícitamente la incertidumbre en vez de fingir precisión. El spread amplio comunica al cliente que este módulo tiene riesgo real.' },
+      { id:'bottom',   lbl:'Bottom-up',         hint:'Descomponer en partes y sumar', ok:false, par:false,
+        fb:'No sabés exactamente con qué problemas te vas a encontrar al integrar el hardware. Bottom-up asume que podés descomponer en partes conocidas — acá eso no aplica todavía.' }
+    ]
+  },
+  {
+    id:'cyber', icon:'🔐', title:'Capacitación Ciberseguridad', sub:'8 developers · Empresa externa',
+    desc:'Empresa externa dicta un curso de secure coding de 3 días para todo el equipo. Requisito corporativo antes de iniciar el desarrollo. El proveedor ya tiene propuesta estándar.',
+    challenge:'El costo depende de la cantidad de personas. El proveedor puede darte precio por persona.',
+    correct:'param',
+    opts:[
+      { id:'analogia', lbl:'Análoga',          hint:'Basada en proyectos pasados similares', ok:false, par:true,
+        fb:'Válida si hiciste algo similar antes. Pero podés ir un paso más allá: cotizá a 2-3 proveedores del mercado y tendrás algo más preciso.' },
+      { id:'param',    lbl:'Paramétrica',       hint:'Precio por unidad × cantidad', ok:true,  par:false,
+        fb:'✅ Textbook: precio por persona × 8 personas. Si el proveedor cobra $1.500/persona, son $12.000. Simple, predecible, fácil de actualizar si el equipo crece. Paramétrica en su forma más pura.' },
+      { id:'tres',     lbl:'3 Puntos (Beta)',   hint:'Optimista, probable, pesimista', ok:false, par:false,
+        fb:'¿Para qué tres escenarios si el precio ya está en la cotización? 3 Puntos agrega complejidad donde no hace falta. Reservalo para cuando la incertidumbre es real.' },
+      { id:'bottom',   lbl:'Bottom-up',         hint:'Descomponer en partes y sumar', ok:false, par:false,
+        fb:'Descomponer un curso en sub-tareas no tiene sentido cuando el proveedor ya te da un precio cerrado. Bottom-up aplica cuando vos construís algo propio, no cuando comprás un servicio.' }
+    ]
+  },
+  {
+    id:'audit', icon:'🔍', title:'Auditoría de Seguridad', sub:'Pentesting · Revisión de código',
+    desc:'Una empresa independiente hace pentesting y revisión de código antes del lanzamiento. Se hace una sola vez al final del proyecto. El cliente lo exige en el contrato.',
+    challenge:'Hay varias empresas especializadas en el mercado. Podés pedir cotizaciones reales antes de arrancar.',
+    correct:'analogia',
+    opts:[
+      { id:'analogia', lbl:'Análoga',          hint:'Basada en proyectos pasados similares', ok:true,  par:false,
+        fb:'✅ Acá "análoga" incluye pedir 2-3 cotizaciones de mercado, que es la mejor práctica. Los precios de auditoría son estables y comparables entre proyectos de tamaño similar. Con cotizaciones reales, tu estimado es muy confiable.' },
+      { id:'param',    lbl:'Paramétrica',       hint:'Precio por unidad × cantidad', ok:false, par:true,
+        fb:'También válida: días de auditor × tarifa diaria. Pero si podés pedir cotización cerrada ("auditoría del proyecto completo"), es más simple y confiable que estimar horas.' },
+      { id:'tres',     lbl:'3 Puntos (Beta)',   hint:'Optimista, probable, pesimista', ok:false, par:false,
+        fb:'Si podés pedir cotización real, ¿por qué usar 3 Puntos? 3 Puntos es para cuando no tenés datos concretos. Acá sí los podés tener.' },
+      { id:'bottom',   lbl:'Bottom-up',         hint:'Descomponer en partes y sumar', ok:false, par:false,
+        fb:'Descomponer la auditoría en sub-tareas no es tu trabajo — es el del auditor. Pedí la cotización cerrada y listo.' }
+    ]
+  }
+];
+
+// ─── STATE ─────────────────────────────────────────
+let curAct = 1, curWP = 0;
+const results = {};
+let appBeta = 90.0, iotBeta = 61.7;
+
+// ─── NAVIGATION ────────────────────────────────────
+function goToAct(n) {
+  document.getElementById('act-'+curAct).classList.remove('active');
+  curAct = n;
+  document.getElementById('act-'+n).classList.add('active');
+  for (let i=1;i<=4;i++) {
+    const d = document.getElementById('dot-'+i);
+    d.className = 'pdot' + (i<n?' done':i===n?' active':'');
+  }
+  document.getElementById('act-label').textContent = 'Acto '+n+' de 4';
+  window.scrollTo({top:0,behavior:'smooth'});
+  if (n===2) renderWP(0);
+  if (n===4) renderBudget();
+}
+
+function restart() {
+  Object.keys(results).forEach(k => delete results[k]);
+  curWP = 0;
+  goToAct(1);
+}
+
+// ─── ACT 2 ─────────────────────────────────────────
+function renderWP(idx) {
+  curWP = idx;
+  const wp = WPS[idx];
+  const c = document.getElementById('wp-container');
+  c.innerHTML = `
+    <div class="wp-card">
+      <div class="wp-header">
+        <div class="wp-icon">${wp.icon}</div>
+        <div style="flex:1">
+          <h3>${wp.title}</h3>
+          <div class="wp-sub">${wp.sub}</div>
+        </div>
+        <div class="wp-prog">${idx+1} / ${WPS.length}</div>
+      </div>
+      <div class="wp-body">
+        <p style="font-size:13px;color:var(--text);font-weight:300;">${wp.desc}</p>
+        <div class="wp-challenge">${wp.challenge}</div>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">¿Qué técnica aplicarías?</p>
+        <div class="tech-grid" id="tg">
+          ${wp.opts.map(o=>`
+            <div class="tech-opt" id="to-${o.id}" onclick="pick('${wp.id}','${o.id}')">
+              <div class="tech-name">${o.lbl}</div>
+              <div class="tech-hint">${o.hint}</div>
+            </div>`).join('')}
+        </div>
+        <div class="fb-box" id="fb"></div>
+        <div class="next-wrap" id="nw">
+          <span class="score-note" id="sn"></span>
+          ${idx < WPS.length-1
+            ? `<button class="btn" onclick="renderWP(${idx+1})">Siguiente →</button>`
+            : `<button class="btn" onclick="goToAct(3)">Calcular estimados →</button>`}
+        </div>
+      </div>
+    </div>`;
+  if (results[wp.id]) applyFb(wp.id, results[wp.id].oid, false);
+}
+
+function pick(wpId, oid) {
+  const wp = WPS.find(w=>w.id===wpId);
+  const o  = wp.opts.find(x=>x.id===oid);
+  results[wpId] = {oid, ok:o.ok, par:o.par};
+  applyFb(wpId, oid, true);
+}
+
+function applyFb(wpId, oid, anim) {
+  const wp = WPS.find(w=>w.id===wpId);
+  const o  = wp.opts.find(x=>x.id===oid);
+  wp.opts.forEach(x=>{
+    const el = document.getElementById('to-'+x.id);
+    if (!el) return;
+    el.className = 'tech-opt';
+    if (x.id===oid) el.classList.add(o.ok?'sel-ok':o.par?'sel-par':'sel-bad');
+    else if (x.ok && !o.ok) el.classList.add('show-ok');
+  });
+  const fb = document.getElementById('fb');
+  if (fb) { fb.textContent=o.fb; fb.className='fb-box vis '+(o.ok?'ok':o.par?'par':'bad'); }
+  const nw = document.getElementById('nw');
+  const sn = document.getElementById('sn');
+  if (nw) {
+    nw.className='next-wrap vis';
+    sn.textContent = o.ok?'✓ Técnica óptima':o.par?'~ Válida, no la mejor':'✗ No es la más adecuada';
+    sn.style.color  = o.ok?'var(--green)':o.par?'var(--amber)':'var(--red)';
+  }
+}
+
+// ─── ACT 3 ─────────────────────────────────────────
+function calc(p) {
+  const o = +document.getElementById(p+'-o').value;
+  const m = +document.getElementById(p+'-m').value;
+  const pv= +document.getElementById(p+'-p').value;
+  document.getElementById(p+'-o-v').textContent=o;
+  document.getElementById(p+'-m-v').textContent=m;
+  document.getElementById(p+'-p-v').textContent=pv;
+  const beta = ((o+4*m+pv)/6).toFixed(1);
+  const tri  = ((o+m+pv)/3).toFixed(1);
+  document.getElementById(p+'-beta').textContent='$'+beta+'k';
+  document.getElementById(p+'-tri').textContent ='$'+tri+'k';
+  const diff = Math.abs(parseFloat(beta)-parseFloat(tri)).toFixed(1);
+  const ins = document.getElementById(p+'-ins');
+  if (+beta < +tri)
+    ins.textContent=`Beta ($${beta}k) < Triangular ($${tri}k) — diferencia de $${diff}k. Beta pondera el "más probable" (×4) y tira el estimado hacia M.`;
+  else if (+beta > +tri)
+    ins.textContent=`Beta ($${beta}k) > Triangular ($${tri}k). Esto pasa cuando P es muy extremo y M está cerca de O.`;
+  else
+    ins.textContent=`Beta y Triangular coinciden cuando los tres valores están simétricamente distribuidos.`;
+  if (p==='app') appBeta=parseFloat(beta);
+  if (p==='iot') iotBeta=parseFloat(beta);
+}
+
+// ─── ACT 4 ─────────────────────────────────────────
+const FIXED = [
+  { icon:'⚙️', name:'Backend & APIs',              note:'', tech:'Bottom-up',               amt:45000 },
+  { icon:'☁️', name:'Infraestructura Cloud',        note:'$2.400/mes × 24 meses', tech:'Paramétrica (AWS)', amt:57600 },
+  { icon:'🔐', name:'Capacitación Ciberseguridad', note:'8 personas × $1.500',    tech:'Paramétrica',      amt:12000 },
+  { icon:'🔍', name:'Auditoría de Seguridad',       note:'cotización de mercado', tech:'Análoga',          amt:22000 }
+];
+
+function fmt(n){ return '$'+n.toLocaleString('es-AR'); }
+
+function renderBudget() {
+  let ok=0, par=0, bad=0;
+  WPS.forEach(w=>{ const r=results[w.id]; if(!r){bad++;return;} if(r.ok)ok++;else if(r.par)par++;else bad++; });
+
+  document.getElementById('score-row').innerHTML=`
+    <div class="sc-item"><div class="sc-big g">${ok}</div><div class="sc-desc">Técnica óptima</div></div>
+    <div class="sc-item"><div class="sc-big a">${par}</div><div class="sc-desc">Válida, no ideal</div></div>
+    <div class="sc-item"><div class="sc-big r">${bad}</div><div class="sc-desc">No adecuada / sin responder</div></div>
+    <div class="sc-msg">${ok===6?'🎯 Excelente criterio. La clase va a ser un paseo.':ok>=4?'👍 Buen ojo. Hay 1-2 casos para profundizar en clase.':ok>=2?'📚 Varios casos interesantes para explorar juntos.':'🤔 Venite con preguntas — la clase va a ser intensa.'}</div>`;
+
+  const appAmt = Math.round(appBeta*1000);
+  const iotAmt = Math.round(iotBeta*1000);
+  const fixedTot = FIXED.reduce((s,f)=>s+f.amt,0);
+  const total = appAmt+iotAmt+fixedTot;
+
+  document.getElementById('budget-tbl').innerHTML=`
+    <thead><tr>
+      <th style="width:40px"></th>
+      <th>Paquete de Trabajo</th>
+      <th>Técnica</th>
+      <th>Estimado</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td class="tbl-icon">📱</td>
+        <td class="tbl-name">App Móvil<small>Calculado por vos · 3 Puntos Beta</small></td>
+        <td class="tbl-tech">3 Puntos (Beta)</td>
+        <td class="tbl-amt">${fmt(appAmt)}</td>
+      </tr>
+      <tr>
+        <td class="tbl-icon">🔌</td>
+        <td class="tbl-name">Integración IoT<small>Calculado por vos · 3 Puntos Beta</small></td>
+        <td class="tbl-tech">3 Puntos (Beta)</td>
+        <td class="tbl-amt">${fmt(iotAmt)}</td>
+      </tr>
+      ${FIXED.map(f=>`
+        <tr>
+          <td class="tbl-icon">${f.icon}</td>
+          <td class="tbl-name">${f.name}${f.note?'<small>'+f.note+'</small>':''}</td>
+          <td class="tbl-tech">${f.tech}</td>
+          <td class="tbl-amt">${fmt(f.amt)}</td>
+        </tr>`).join('')}
+      <tr class="tbl-total">
+        <td></td>
+        <td class="tbl-name">Total estimado</td>
+        <td></td>
+        <td class="tbl-amt">${fmt(total)}</td>
+      </tr>
+    </tbody>`;
+
+  document.getElementById('range-early').textContent = fmt(Math.round(total*.75))+' – '+fmt(Math.round(total*1.75));
+  document.getElementById('range-late').textContent  = fmt(Math.round(total*.95))+' – '+fmt(Math.round(total*1.10));
+}
+
+// ─── INIT ───────────────────────────────────────────
+calc('app');
+calc('iot');
+</script>
+</body>
+</html>

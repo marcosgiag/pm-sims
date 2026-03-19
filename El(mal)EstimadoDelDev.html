@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El (mal)Estimado del Dev · Simulador PM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:          #080d08;
+  --surface:     #0e160e;
+  --card:        #111911;
+  --card-hi:     #162016;
+  --border:      #1a2a1a;
+  --border-hi:   #2a422a;
+  --text:        #d8ead8;
+  --text-muted:  #6e8e6e;
+  --text-dim:    #334433;
+  --green:       #4ade80;
+  --green-dim:   #16a34a;
+  --amber:       #fbbf24;
+  --red:         #f87171;
+  --blue:        #60a5fa;
+  --fn-h:        'Syne', sans-serif;
+  --fn-b:        'DM Sans', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--fn-b);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse 60% 35% at 50% -5%, rgba(74,222,128,.05) 0%, transparent 55%);
+  pointer-events: none; z-index: 0;
+}
+
+.wrap { max-width: 820px; margin: 0 auto; padding: 0 22px; position: relative; z-index: 1; }
+
+/* ── TOP BAR ── */
+.topbar {
+  padding: 16px 0 13px;
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.logo { font-family: var(--fn-h); font-weight: 800; font-size: 14px; color: var(--green); letter-spacing: -.3px; }
+.logo span { color: var(--text-muted); font-weight: 600; }
+.act-lbl { font-size: 10px; color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; margin-left: auto; font-weight: 300; }
+.dots { display: flex; gap: 5px; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: all .3s; }
+.dot.on   { background: var(--green); box-shadow: 0 0 7px rgba(74,222,128,.5); }
+.dot.done { background: var(--green-dim); }
+
+/* ── ACTS ── */
+.act { display: none; padding: 38px 0 80px; animation: up .35s ease; }
+.act.show { display: block; }
+@keyframes up { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── TYPE ── */
+h1 { font-family: var(--fn-h); font-size: clamp(26px,4.5vw,42px); font-weight: 800; line-height: 1.08; letter-spacing: -1.4px; }
+h1 .hi { color: var(--green); }
+h2 { font-family: var(--fn-h); font-size: 18px; font-weight: 700; letter-spacing: -.3px; }
+h3 { font-family: var(--fn-h); font-size: 14px; font-weight: 700; letter-spacing: -.2px; }
+p  { font-size: 13.5px; line-height: 1.65; color: var(--text-muted); font-weight: 300; }
+p strong { color: var(--text); font-weight: 500; }
+.lead { font-size: 15px; line-height: 1.6; color: var(--text); font-weight: 300; max-width: 600px; }
+.g8{margin-top:8px} .g12{margin-top:12px} .g16{margin-top:16px}
+.g24{margin-top:24px} .g32{margin-top:32px} .g40{margin-top:40px}
+
+.tag {
+  display: inline-block; font-size: 9.5px; font-weight: 500;
+  letter-spacing: .1em; text-transform: uppercase; padding: 3px 9px;
+  border-radius: 3px; background: rgba(74,222,128,.07); color: var(--green);
+  border: 1px solid rgba(74,222,128,.16);
+}
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 20px; background: var(--green); color: #030a03;
+  font-family: var(--fn-b); font-size: 13px; font-weight: 500;
+  border: none; border-radius: 6px; cursor: pointer; transition: all .18s;
+}
+.btn:hover { background: #6ee7a0; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(74,222,128,.25); }
+.btn.ghost {
+  background: transparent; color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.btn.ghost:hover { border-color: var(--border-hi); color: var(--text); background: var(--card); box-shadow: none; transform: none; }
+
+/* ── MENTOR ── */
+.mentor {
+  display: flex; gap: 12px; padding: 13px 16px;
+  background: rgba(74,222,128,.03); border: 1px solid rgba(74,222,128,.11);
+  border-left: 3px solid var(--green); border-radius: 8px; margin: 20px 0;
+}
+.m-av { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg,#166534,#4ade80); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+.m-name { font-size: 10px; font-weight: 500; color: var(--green); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 3px; }
+.mentor p { font-size: 12.5px; color: var(--text); margin: 0; }
+
+/* ── SLIDERS (Act 1) ── */
+.est-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+@media(max-width:540px){ .est-grid{ grid-template-columns:1fr; } }
+
+.est-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px 18px;
+}
+.ec-head { display:flex; align-items:center; gap:9px; margin-bottom:12px; }
+.ec-icon { font-size:20px; }
+.ec-sub { font-size:10px; color:var(--text-dim); margin-top:2px; }
+.sl-row { margin-bottom:0; }
+.sl-lbl { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+.sl-name { font-size:12px; color:var(--text-muted); }
+.sl-val  { font-family:var(--fn-h); font-size:16px; font-weight:700; color:var(--text); }
+
+input[type=range] {
+  width:100%; -webkit-appearance:none; appearance:none;
+  height:2px; border-radius:2px; background:var(--border); outline:none; cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+  background:var(--green); cursor:pointer; box-shadow:0 0 7px rgba(74,222,128,.4);
+  transition:transform .12s;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.2); }
+
+.total-strip {
+  margin-top: 20px; padding: 16px 20px;
+  background: var(--card); border: 1px solid var(--border-hi);
+  border-radius: 10px; display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 10px;
+}
+.ts-lbl { font-size: 12px; color: var(--text-muted); }
+.ts-num { font-family: var(--fn-h); font-size: 26px; font-weight: 800; color: var(--text); }
+.ts-note { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
+
+.lock-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 18px; background: rgba(74,222,128,.09); color: var(--green);
+  font-family: var(--fn-b); font-size: 12px; font-weight: 500;
+  border: 1px solid rgba(74,222,128,.22); border-radius: 6px;
+  cursor: pointer; transition: all .18s;
+}
+.lock-btn:hover { background: rgba(74,222,128,.16); }
+
+/* ── AUDIT CARDS (Act 2) ── */
+.progress-bar-wrap {
+  margin: 18px 0 22px; display:flex; align-items:center; gap:10px;
+}
+.pbar-bg { flex:1; height:3px; background:var(--border); border-radius:2px; overflow:hidden; }
+.pbar-fill { height:100%; background:var(--green); border-radius:2px; transition:width .4s ease; }
+.pbar-lbl { font-size:11px; color:var(--text-dim); white-space:nowrap; }
+
+.running-gap {
+  padding: 12px 18px; background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px; margin-bottom: 22px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+}
+.rg-section { }
+.rg-lbl { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .07em; }
+.rg-num { font-family: var(--fn-h); font-size: 19px; font-weight: 800; transition: color .3s; }
+.rg-num.zero { color: var(--text-dim); }
+.rg-num.low  { color: var(--amber); }
+.rg-num.high { color: var(--red); }
+.rg-pct { font-size: 11px; font-weight: 400; margin-left: 4px; }
+.rg-divider { width: 1px; height: 30px; background: var(--border); }
+
+.cat-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden;
+  animation: up .3s ease;
+}
+.cat-head {
+  padding: 18px 22px; display: flex; align-items: flex-start; gap: 13px;
+  border-bottom: 1px solid var(--border);
+}
+.cat-icon { font-size: 26px; margin-top: 1px; flex-shrink:0; }
+.cat-badge {
+  font-size: 9px; font-weight: 500; letter-spacing:.08em; text-transform:uppercase;
+  padding: 2px 7px; border-radius: 3px; margin-bottom: 5px; display: inline-block;
+}
+.badge-dev  { background:rgba(96,165,250,.1); color:#93c5fd; border:1px solid rgba(96,165,250,.2); }
+.badge-proj { background:rgba(251,191,36,.08); color:#fde68a; border:1px solid rgba(251,191,36,.18); }
+.cat-desc { font-size: 12.5px; color: var(--text-muted); line-height: 1.55; margin-top: 4px; font-weight:300; }
+.cat-num-wrap { margin-left: auto; text-align: right; flex-shrink:0; }
+.cat-num { font-family: var(--fn-h); font-size: 20px; font-weight: 800; color: var(--text); }
+.cat-note { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+
+.cat-body { padding: 16px 22px; }
+
+.question-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; flex-wrap: wrap;
+}
+.question-text {
+  font-size: 13px; color: var(--text); font-weight: 400;
+  font-style: italic;
+}
+.yn-btns { display: flex; gap: 7px; }
+.yn { padding: 7px 16px; border-radius: 5px; font-size: 12px; font-weight: 500;
+  cursor: pointer; border: 1px solid var(--border); background: var(--surface);
+  font-family: var(--fn-b); color: var(--text-muted); transition: all .15s;
+}
+.yn:hover { border-color: var(--border-hi); color: var(--text); }
+.yn.yes-sel { background: rgba(74,222,128,.1); border-color: rgba(74,222,128,.35); color: var(--green); }
+.yn.no-sel  { background: rgba(248,113,113,.07); border-color: rgba(248,113,113,.3); color: #fca5a5; }
+
+.reveal-box {
+  display: none; margin-top: 14px; padding: 12px 15px;
+  border-radius: 7px; font-size: 12.5px; line-height: 1.55; font-weight:300;
+}
+.reveal-box.show { display: block; animation: up .25s ease; }
+.reveal-box.yes { background:rgba(74,222,128,.05); border:1px solid rgba(74,222,128,.15); color:#86efac; }
+.reveal-box.no  { background:rgba(248,113,113,.05); border:1px solid rgba(248,113,113,.15); color:#fca5a5; }
+
+.next-row { margin-top: 14px; display:none; justify-content:flex-end; }
+.next-row.show { display:flex; }
+
+/* ── RESULT (Act 3) ── */
+.gap-hero {
+  padding: 28px 26px; border-radius: 14px;
+  background: var(--card); border: 1px solid var(--border-hi);
+  margin-bottom: 24px;
+}
+.gap-cols { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; }
+@media(max-width:480px){ .gap-cols{ grid-template-columns:1fr; } }
+.gap-item { }
+.gap-item-lbl { font-size: 10px; color: var(--text-dim); text-transform:uppercase; letter-spacing:.08em; margin-bottom:5px; }
+.gap-item-num { font-family:var(--fn-h); font-size: clamp(24px,4vw,36px); font-weight:800; line-height:1; }
+.gap-item-num.dev  { color: var(--text-muted); }
+.gap-item-num.real { color: var(--red); }
+.gap-item-sub { font-size:11px; color:var(--text-dim); margin-top:3px; }
+.gap-arrow { font-size:22px; color:var(--text-dim); text-align:center; }
+.gap-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 20px; margin-top: 12px;
+  font-family: var(--fn-h); font-size: 15px; font-weight: 800;
+  background: rgba(248,113,113,.1); color: var(--red); border: 1px solid rgba(248,113,113,.25);
+}
+
+.breakdown-tbl { width:100%; border-collapse:collapse; }
+.breakdown-tbl th {
+  font-family:var(--fn-h); font-size:10px; text-transform:uppercase;
+  letter-spacing:.08em; color:var(--text-dim); padding: 0 14px 9px;
+  text-align:left; border-bottom:1px solid var(--border);
+}
+.breakdown-tbl th:last-child { text-align:right; }
+.breakdown-tbl td { padding:11px 14px; border-bottom:1px solid var(--border); font-size:13px; vertical-align:middle; }
+.breakdown-tbl tr:last-child td { border-bottom:none; }
+.t-icon { font-size:16px; }
+.t-name { font-weight:500; color:var(--text); }
+.t-name small { display:block; font-size:10.5px; font-weight:300; color:var(--text-dim); margin-top:1px; }
+.t-badge { font-size:10px; padding:2px 7px; border-radius:3px; }
+.t-amt { text-align:right; font-family:var(--fn-h); font-size:14px; font-weight:700; }
+.t-amt.dev-col  { color:var(--text-muted); }
+.t-amt.proj-col { color:var(--amber); }
+.tbl-sub td { border-top:2px solid var(--border-hi); padding-top:13px; border-bottom:none; }
+.tbl-sub .t-name { font-family:var(--fn-h); font-weight:700; font-size:14px; }
+.tbl-sub .t-amt { font-size:17px; }
+.tbl-sub .t-amt.total-col { color:var(--green); }
+
+.iceberg {
+  margin-top: 22px; padding: 18px 22px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+}
+.ice-title { font-family:var(--fn-h); font-size:14px; font-weight:700; margin-bottom:12px; }
+.ice-bar-wrap { display:flex; height:28px; border-radius:6px; overflow:hidden; gap:2px; }
+.ice-seg { display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:500; color:#030a03; transition:width .8s ease; white-space:nowrap; overflow:hidden; }
+.ice-legend { display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; }
+.ice-leg-item { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-muted); }
+.ice-dot { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+
+.reflect {
+  margin-top: 22px; padding: 18px 22px;
+  background: rgba(74,222,128,.02); border: 1px solid rgba(74,222,128,.1);
+  border-radius: 12px;
+}
+.reflect-title { font-family:var(--fn-h); font-size:13px; font-weight:700; color:var(--green); margin-bottom:11px; }
+.rq {
+  font-size:12.5px; color:var(--text); font-weight:300; line-height:1.55;
+  padding-left:12px; border-left:2px solid var(--green-dim);
+  margin-bottom:9px;
+}
+.rq:last-child { margin-bottom:0; }
+
+.next-sim {
+  margin-top: 22px; padding: 18px 22px;
+  background: rgba(96,165,250,.04); border: 1px solid rgba(96,165,250,.14);
+  border-radius: 12px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+}
+.ns-text { flex:1; min-width:200px; }
+.ns-text h3 { font-size:14px; color:#93c5fd; }
+.ns-text p { font-size:12px; margin-top:4px; color:#7fb4f7; }
+.btn.blue {
+  background: rgba(96,165,250,.15); color: #93c5fd;
+  border: 1px solid rgba(96,165,250,.28);
+}
+.btn.blue:hover { background: rgba(96,165,250,.25); box-shadow: none; transform: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">El (mal)Estimado<span> del Dev</span></div>
+  <div class="act-lbl" id="act-lbl">Paso 1 de 3</div>
+  <div class="dots">
+    <div class="dot on"   id="d1"></div>
+    <div class="dot"      id="d2"></div>
+    <div class="dot"      id="d3"></div>
+  </div>
+</div>
+
+<!-- ══════════════ ACT 1 ══════════════ -->
+<div class="act show" id="act-1">
+  <div class="g40"></div>
+  <div class="tag">El estimado de siempre</div>
+  <div class="g12"></div>
+  <h1>Te piden el<br><span class="hi">presupuesto del proyecto.</span></h1>
+  <div class="g16"></div>
+  <p class="lead">6 meses de desarrollo. 5 personas en el equipo. Una app con backend, cloud y algo de integración. Ajustá los números como los estimarías vos hoy.</p>
+
+  <div class="mentor">
+    <div class="m-av">💻</div>
+    <div>
+      <div class="m-name">El Dev Lead</div>
+      <p>"Fácil: salarios del equipo más la infra cloud. ¿Cuánto más puede haber?" — Esta es la pregunta que vamos a responder.</p>
+    </div>
+  </div>
+
+  <div class="est-grid">
+    <div class="est-card">
+      <div class="ec-head">
+        <span class="ec-icon">👥</span>
+        <div>
+          <h3>Desarrollo</h3>
+          <div class="ec-sub">Costo del equipo · 6 meses</div>
+        </div>
+      </div>
+      <div class="sl-row">
+        <div class="sl-lbl">
+          <span class="sl-name">Costo mensual equipo (USD)</span>
+          <span class="sl-val" id="dev-m-v">15.000</span>
+        </div>
+        <input type="range" id="dev-m" min="5000" max="40000" step="500" value="15000" oninput="updEst()">
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--text-dim);">× 6 meses = <strong id="dev-tot" style="color:var(--text-muted)">$90.000</strong></div>
+    </div>
+
+    <div class="est-card">
+      <div class="ec-head">
+        <span class="ec-icon">☁️</span>
+        <div>
+          <h3>Infraestructura</h3>
+          <div class="ec-sub">Cloud · prod + staging · 6 meses</div>
+        </div>
+      </div>
+      <div class="sl-row">
+        <div class="sl-lbl">
+          <span class="sl-name">Costo mensual infra (USD)</span>
+          <span class="sl-val" id="inf-m-v">2.000</span>
+        </div>
+        <input type="range" id="inf-m" min="300" max="12000" step="100" value="2000" oninput="updEst()">
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--text-dim);">× 6 meses = <strong id="inf-tot" style="color:var(--text-muted)">$12.000</strong></div>
+    </div>
+  </div>
+
+  <div class="total-strip">
+    <div>
+      <div class="ts-lbl">Tu estimado inicial</div>
+      <div class="ts-num" id="est-total">$102.000</div>
+      <div class="ts-note">Desarrollo + Infraestructura</div>
+    </div>
+    <button class="lock-btn" onclick="lockAndAudit()">
+      🔒 Bloqueá este número →
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════ ACT 2 ══════════════ -->
+<div class="act" id="act-2">
+  <div class="g40"></div>
+  <div class="tag">La auditoría</div>
+  <div class="g12"></div>
+  <h1>¿Qué dejaste<br><span class="hi">afuera?</span></h1>
+  <div class="g12"></div>
+  <p class="lead">Tu estimado inicial fue <strong id="a2-locked">$102.000</strong>. Ahora revisamos 8 categorías que los devs sistemáticamente olvidan.</p>
+
+  <div class="mentor">
+    <div class="m-av">👩</div>
+    <div>
+      <div class="m-name">Ana · PM Senior</div>
+      <p>Por cada categoría: respondé honestamente si la tenías en tu estimado. No hay respuestas correctas — hay costos reales.</p>
+    </div>
+  </div>
+
+  <div class="progress-bar-wrap">
+    <div class="pbar-bg"><div class="pbar-fill" id="pbar" style="width:0%"></div></div>
+    <div class="pbar-lbl" id="pbar-lbl">0 / 8</div>
+  </div>
+
+  <div class="running-gap">
+    <div class="rg-section">
+      <div class="rg-lbl">Tu estimado</div>
+      <div class="rg-num" id="rg-base" style="color:var(--text-muted)">$102.000</div>
+    </div>
+    <div class="rg-divider"></div>
+    <div class="rg-section">
+      <div class="rg-lbl">Acumulado olvidado</div>
+      <div class="rg-num zero" id="rg-gap">$0</div>
+    </div>
+    <div class="rg-divider"></div>
+    <div class="rg-section">
+      <div class="rg-lbl">Total real (hasta acá)</div>
+      <div class="rg-num zero" id="rg-real">–</div>
+    </div>
+    <div class="rg-divider"></div>
+    <div class="rg-section">
+      <div class="rg-lbl">Desvío</div>
+      <div class="rg-num zero" id="rg-pct">–</div>
+    </div>
+  </div>
+
+  <div id="cat-area"></div>
+</div>
+
+<!-- ══════════════ ACT 3 ══════════════ -->
+<div class="act" id="act-3">
+  <div class="g40"></div>
+  <div class="tag">El resultado</div>
+  <div class="g12"></div>
+  <h1>La brecha entre<br>lo que estimaste<br><span class="hi">y lo que cuesta.</span></h1>
+  <div class="g24"></div>
+
+  <div class="gap-hero">
+    <div class="gap-cols">
+      <div class="gap-item">
+        <div class="gap-item-lbl">Tu estimado inicial</div>
+        <div class="gap-item-num dev" id="r-est">$102.000</div>
+        <div class="gap-item-sub">Solo desarrollo + infra</div>
+      </div>
+      <div class="gap-arrow">→</div>
+      <div class="gap-item">
+        <div class="gap-item-lbl">Costo real del proyecto</div>
+        <div class="gap-item-num real" id="r-real">–</div>
+        <div class="gap-item-sub">Todos los costos incluidos</div>
+      </div>
+    </div>
+    <div class="gap-badge" id="r-badge">+?? % por encima</div>
+  </div>
+
+  <table class="breakdown-tbl">
+    <thead><tr>
+      <th style="width:36px"></th>
+      <th>Categoría</th>
+      <th style="width:90px">Tipo</th>
+      <th>Monto</th>
+    </tr></thead>
+    <tbody id="r-tbl"></tbody>
+  </table>
+
+  <div class="iceberg" id="ice-section">
+    <div class="ice-title">Composición del presupuesto real</div>
+    <div class="ice-bar-wrap" id="ice-bar"></div>
+    <div class="ice-legend">
+      <div class="ice-leg-item"><div class="ice-dot" style="background:#4a7c59"></div>Desarrollo</div>
+      <div class="ice-leg-item"><div class="ice-dot" style="background:#2d5a3d"></div>Infraestructura</div>
+      <div class="ice-leg-item"><div class="ice-dot" style="background:#b45309"></div>Costos del proyecto</div>
+    </div>
+  </div>
+
+  <div class="reflect">
+    <div class="reflect-title">💬 Para pensar antes de la clase</div>
+    <p class="rq">¿Cuántos proyectos se presentaron "dentro del presupuesto" pero en realidad ignoraron estas categorías desde el arranque?</p>
+    <p class="rq">¿Cuáles de estos costos podría haber cubierto el cliente si los hubieras pedido al inicio? ¿Y si los pedís en el medio del proyecto?</p>
+    <p class="rq">Si el costo del proyecto sube 40%, ¿qué pasa con la rentabilidad del proyecto? ¿Y con la relación con el cliente?</p>
+    <p class="rq">¿Qué cambia si estos costos los pone la empresa "de su bolsillo" versus si están explícitos en el presupuesto del proyecto?</p>
+  </div>
+
+  <div class="next-sim">
+    <div class="ns-text">
+      <h3>→ Siguiente: GreenCut Pro PM Simulator</h3>
+      <p>Ahora que sabés qué cuesta un proyecto, elegí la técnica correcta para estimar cada paquete.</p>
+    </div>
+    <button class="btn blue" disabled>Abrir simulador →</button>
+  </div>
+
+  <div class="g24"></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <button class="btn ghost" onclick="restart()">↺ Empezar de nuevo</button>
+    <button class="btn ghost" onclick="goAct(2)">← Revisar auditoría</button>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+// ─── DATA ──────────────────────────────
+let devMonthly = 15000, infMonthly = 2000;
+let initEst = 102000;
+let gapAccum = 0;
+let catIdx = 0;
+const answered = {};
+
+const CATS = [
+  {
+    id:'hw', icon:'🖥️', name:'Hardware del equipo',
+    badge:'proj', badgeTxt:'Costo del proyecto',
+    amt:7500,
+    note:'5 laptops × $1.500',
+    desc:'Cinco developers necesitan máquinas capaces de correr el entorno de desarrollo, emuladores móviles y la base de datos local. Si la empresa las provee, el costo igual existe — solo está en otro centro de costo.',
+    q:'¿Incluiste las computadoras del equipo en tu estimado?',
+    yes:'Bien — muchos no lo hacen. Igual registralo explícitamente: si hay rotación de personal, necesitás ese número.',
+    no:'Típico. Las laptops "las pone la empresa" — pero el proyecto las necesita para existir. En proyectos con hardware específico (alta RAM, GPUs) el número puede ser bastante mayor.'
+  },
+  {
+    id:'lic', icon:'🔑', name:'Licencias de software',
+    badge:'proj', badgeTxt:'Costo del proyecto',
+    amt:4800,
+    note:'JetBrains + Figma + Office + accesos × 6 meses',
+    desc:'IDEs con soporte profesional, herramientas de diseño para los mocks de la app, suite de ofimática para documentar, accesos a repositorios privados, gestión de contraseñas corporativas. Todo tiene precio.',
+    q:'¿Las licencias de herramientas de desarrollo estaban en tu número?',
+    yes:'Perfecto. ¿Incluiste también las herramientas de diseño, documentación y gestión del equipo?',
+    no:'Las licencias son fáciles de olvidar porque suelen pagarse por suscripción mensual o anual. Pero sumadas, 5 devs × un stack completo de herramientas × 6 meses es un número relevante.'
+  },
+  {
+    id:'ai', icon:'🤖', name:'SaaS & Agentes AI',
+    badge:'proj', badgeTxt:'Costo del proyecto',
+    amt:3600,
+    note:'GitHub Copilot + ChatGPT Pro × 5 devs × 6 meses',
+    desc:'Si el equipo usa IA para escribir código — y hoy casi todos lo hacen — esas suscripciones tienen costo. Copilot Business, ChatGPT Pro, herramientas de code review automatizado, generación de tests. Escala con el equipo.',
+    q:'¿Tenías el costo de las herramientas de IA en tu estimado?',
+    yes:'Excelente — relativamente pocos PMs lo hacen todavía. Es un costo nuevo que todavía no está institucionalizado en muchos templates de presupuesto.',
+    no:'Este es el costo más nuevo y el más fácil de olvidar. Pero si la productividad del equipo depende de estas herramientas, el proyecto depende de su continuidad — y eso tiene precio.'
+  },
+  {
+    id:'viaje', icon:'✈️', name:'Viajes y traslados',
+    badge:'proj', badgeTxt:'Costo del proyecto',
+    amt:5200,
+    note:'Kick-off + reuniones de avance + cierre presencial',
+    desc:'Kick-off presencial con el cliente, al menos dos reuniones de avance en sus oficinas, cierre y entrega final. Si el cliente está en otra ciudad o país, los números escalan rápido. Incluso reuniones locales tienen costo de tiempo y transporte.',
+    q:'¿Estimaste los viajes y reuniones presenciales?',
+    yes:'Bien. ¿Usaste datos reales de destino o fue un número genérico? Los viajes suelen ser uno de los primeros ítems en explotar por encima del estimado.',
+    no:'Un viaje de Buenos Aires a Córdoba con hotel y reunión de un día puede costar $800–1.200 fácilmente. Multiplícalo por 4–5 viajes en 6 meses.'
+  },
+  {
+    id:'cert', icon:'🏅', name:'Certificaciones',
+    badge:'proj', badgeTxt:'Costo del proyecto',
+    amt:3000,
+    note:'2 certif. AWS para el backend + DevOps del equipo',
+    desc:'El proyecto requiere infraestructura cloud avanzada. Dos integrantes del equipo van a certificarse en AWS durante el proyecto. El costo del examen es del proyecto — les da la habilidad que necesitan ahora.',
+    q:'¿Incluiste los exámenes de certificación del equipo?',
+    yes:'Bien pensado. Las certificaciones son inversión directa en capacidad del proyecto — no solo en el CV del dev.',
+    no:'Este es un gris clásico: "¿es costo del proyecto o inversión en el empleado?". En la práctica, si el proyecto los necesita ahora, el costo es del proyecto.'
+  },
+  {
+    id:'cap', icon:'🎓', name:'Capacitaciones del proyecto',
+    badge:'proj', badgeTxt:'Costo del proyecto',
+    amt:8000,
+    note:'Curso de Ciberseguridad · 5 devs × empresa externa',
+    desc:'Antes de arrancar el desarrollo, el área de seguridad corporativa exige que todo el equipo tome un curso de secure coding. Lo dicta una empresa especializada. Es un costo real, necesario para poder iniciar el proyecto.',
+    q:'¿Tenías las capacitaciones obligatorias en tu presupuesto?',
+    yes:'Muy bien. Muchos PMs las descubren en el kick-off cuando seguridad dice "antes de arrancar, todos tienen que tomar el curso".',
+    no:'Las capacitaciones pre-proyecto son uno de los costos más frecuentemente omitidos. Aparecen al inicio, antes de que el equipo produzca una sola línea de código.'
+  },
+  {
+    id:'pm', icon:'📋', name:'Gestión del proyecto',
+    badge:'proj', badgeTxt:'Costo del proyecto',
+    amt:18000,
+    note:'PM dedicado al 50% × 6 meses + reuniones del equipo',
+    desc:'El tiempo del PM para planificar, coordinar, reportar, gestionar riesgos y resolver problemas. Las reuniones del equipo (daily, retrospectivas, planning). Las horas que el equipo destina a gestión en lugar de desarrollo. Todo eso es costo.',
+    q:'¿El tiempo de gestión del proyecto estaba en tu estimado?',
+    yes:'Excelente — es el que más se subestima incluso cuando se incluye. El overhead de coordinación en equipos de 5+ personas puede llegar al 20% del tiempo total.',
+    no:'El costo más grande de los olvidados. Un PM al 50% por 6 meses, más el tiempo de gestión que absorbe el equipo, puede representar el 15–20% del presupuesto total. Y no genera código.'
+  },
+  {
+    id:'launch', icon:'📢', name:'Lanzamiento y comunicación',
+    badge:'proj', badgeTxt:'Costo del proyecto',
+    amt:6500,
+    note:'Press release + demo day + materiales de marketing',
+    desc:'El proyecto no termina cuando el código está deployado. El lanzamiento requiere comunicación al mercado: press release, evento de presentación al cliente, materiales de marketing, videos demo, publicaciones en redes del producto.',
+    q:'¿Tenías los costos de lanzamiento en tu estimado?',
+    yes:'Bien. ¿Los coordinaste con el área de Marketing para tener números reales, o fue una estimación propia?',
+    no:'El lanzamiento suele caer en tierra de nadie: Marketing dice que lo paga el proyecto, el PM dice que lo paga Marketing. Si no lo ponés en el presupuesto al inicio, lo pagás de emergencia al final — y siempre sale más caro.'
+  }
+];
+
+// ─── STATE ─────────────────────────────
+function fmt(n){ return '$'+Math.round(n).toLocaleString('es-AR'); }
+
+function updEst() {
+  devMonthly = +document.getElementById('dev-m').value;
+  infMonthly = +document.getElementById('inf-m').value;
+  document.getElementById('dev-m-v').textContent = devMonthly.toLocaleString('es-AR');
+  document.getElementById('inf-m-v').textContent = infMonthly.toLocaleString('es-AR');
+  const devT = devMonthly*6, infT = infMonthly*6, tot = devT+infT;
+  document.getElementById('dev-tot').textContent = fmt(devT);
+  document.getElementById('inf-tot').textContent = fmt(infT);
+  document.getElementById('est-total').textContent = fmt(tot);
+  initEst = tot;
+}
+
+function lockAndAudit() {
+  goAct(2);
+  const el2 = document.getElementById('a2-locked');
+  if(el2) el2.textContent = fmt(initEst);
+  document.getElementById('rg-base').textContent = fmt(initEst);
+  document.getElementById('rg-real').textContent = '–';
+  document.getElementById('rg-gap').textContent  = '$0';
+  document.getElementById('rg-pct').textContent  = '–';
+  gapAccum = 0; catIdx = 0;
+  Object.keys(answered).forEach(k=>delete answered[k]);
+  renderCat(0);
+}
+
+// ─── NAVIGATION ────────────────────────
+function goAct(n) {
+  [1,2,3].forEach(i=>{
+    document.getElementById('act-'+i).classList.remove('show');
+    const d = document.getElementById('d'+i);
+    d.className = 'dot' + (i<n?' done':i===n?' on':'');
+  });
+  document.getElementById('act-'+n).classList.add('show');
+  document.getElementById('act-lbl').textContent = 'Paso '+n+' de 3';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function restart() {
+  updEst();
+  goAct(1);
+}
+
+// ─── CAT RENDER ────────────────────────
+function renderCat(idx) {
+  catIdx = idx;
+  const c = CATS[idx];
+  const area = document.getElementById('cat-area');
+
+  // progress
+  document.getElementById('pbar').style.width = (idx/CATS.length*100)+'%';
+  document.getElementById('pbar-lbl').textContent = idx+' / '+CATS.length;
+
+  area.innerHTML = `
+    <div class="cat-card">
+      <div class="cat-head">
+        <span class="cat-icon">${c.icon}</span>
+        <div style="flex:1">
+          <span class="cat-badge badge-${c.badge}">${c.badgeTxt}</span>
+          <h3>${c.name}</h3>
+          <p class="cat-desc g8">${c.desc}</p>
+        </div>
+        <div class="cat-num-wrap">
+          <div class="cat-num">${fmt(c.amt)}</div>
+          <div class="cat-note">${c.note}</div>
+        </div>
+      </div>
+      <div class="cat-body">
+        <div class="question-row">
+          <span class="question-text">${c.q}</span>
+          <div class="yn-btns">
+            <button class="yn" id="yn-y" onclick="answer('${c.id}',true)">Sí lo tenía</button>
+            <button class="yn" id="yn-n" onclick="answer('${c.id}',false)">No lo tenía</button>
+          </div>
+        </div>
+        <div class="reveal-box" id="rb"></div>
+        <div class="next-row" id="nr">
+          ${idx < CATS.length-1
+            ? `<button class="btn" onclick="renderCat(${idx+1})">Siguiente →</button>`
+            : `<button class="btn" onclick="showResult()">Ver el resultado final →</button>`}
+        </div>
+      </div>
+    </div>`;
+
+  if(answered[c.id] !== undefined) applyAnswer(c.id, answered[c.id], false);
+}
+
+function answer(catId, hadIt) {
+  answered[catId] = hadIt;
+  const c = CATS.find(x=>x.id===catId);
+  if(!hadIt) {
+    gapAccum += c.amt;
+    updGap();
+  }
+  applyAnswer(catId, hadIt, true);
+}
+
+function applyAnswer(catId, hadIt, animate) {
+  const yn_y = document.getElementById('yn-y');
+  const yn_n = document.getElementById('yn-n');
+  if(yn_y) { yn_y.classList.toggle('yes-sel', hadIt);  yn_y.disabled = true; }
+  if(yn_n) { yn_n.classList.toggle('no-sel',  !hadIt); yn_n.disabled = true; }
+  const rb = document.getElementById('rb');
+  const c  = CATS.find(x=>x.id===catId);
+  if(rb) {
+    rb.textContent = hadIt ? c.yes : c.no;
+    rb.className = 'reveal-box show ' + (hadIt ? 'yes' : 'no');
+  }
+  const nr = document.getElementById('nr');
+  if(nr) nr.className = 'next-row show';
+}
+
+function updGap() {
+  const real = initEst + gapAccum;
+  const pct  = Math.round((gapAccum/initEst)*100);
+  document.getElementById('rg-gap').textContent  = fmt(gapAccum);
+  document.getElementById('rg-real').textContent = fmt(real);
+  document.getElementById('rg-pct').textContent  = '+'+pct+'%';
+  const gn = document.getElementById('rg-gap');
+  const rn = document.getElementById('rg-real');
+  const pn = document.getElementById('rg-pct');
+  const cls = pct < 15 ? 'low' : 'high';
+  [gn, rn, pn].forEach(el => { el.className = 'rg-num '+cls; });
+}
+
+// ─── RESULT ────────────────────────────
+function showResult() {
+  // force all unanswered = not included
+  CATS.forEach(c => { if(answered[c.id]===undefined){ answered[c.id]=false; gapAccum+=c.amt; } });
+  updGap();
+  document.getElementById('pbar').style.width = '100%';
+  document.getElementById('pbar-lbl').textContent = '8 / 8';
+
+  const devTotal  = devMonthly*6;
+  const infTotal  = infMonthly*6;
+  const projTotal = CATS.reduce((s,c)=>s+c.amt,0);
+  const real      = initEst + projTotal;
+  const pct       = Math.round((projTotal/initEst)*100);
+
+  document.getElementById('r-est').textContent  = fmt(initEst);
+  document.getElementById('r-real').textContent = fmt(real);
+  document.getElementById('r-badge').textContent = '+'+pct+'% por encima de tu estimado';
+
+  // TABLE
+  let rows = `
+    <tr>
+      <td class="t-icon">👥</td>
+      <td class="t-name">Desarrollo<small>Equipo × 6 meses</small></td>
+      <td><span class="t-badge badge-dev">Dev</span></td>
+      <td class="t-amt dev-col">${fmt(devTotal)}</td>
+    </tr>
+    <tr>
+      <td class="t-icon">☁️</td>
+      <td class="t-name">Infraestructura<small>Cloud × 6 meses</small></td>
+      <td><span class="t-badge badge-dev">Dev</span></td>
+      <td class="t-amt dev-col">${fmt(infTotal)}</td>
+    </tr>`;
+
+  CATS.forEach(c => {
+    rows += `
+    <tr>
+      <td class="t-icon">${c.icon}</td>
+      <td class="t-name">${c.name}<small>${c.note}</small></td>
+      <td><span class="t-badge badge-proj" style="background:rgba(251,191,36,.08);color:#fde68a;border:1px solid rgba(251,191,36,.18)">Proyecto</span></td>
+      <td class="t-amt proj-col">${fmt(c.amt)}</td>
+    </tr>`;
+  });
+
+  rows += `
+    <tr class="tbl-sub">
+      <td></td>
+      <td class="t-name">Total real</td>
+      <td></td>
+      <td class="t-amt total-col">${fmt(real)}</td>
+    </tr>`;
+
+  document.getElementById('r-tbl').innerHTML = rows;
+
+  // BAR
+  const devPct  = Math.round(devTotal/real*100);
+  const infPct  = Math.round(infTotal/real*100);
+  const projPct = 100 - devPct - infPct;
+  document.getElementById('ice-bar').innerHTML = `
+    <div class="ice-seg" style="width:${devPct}%;background:#4a7c59;border-radius:6px 0 0 6px;">${devPct>8?devPct+'%':''}</div>
+    <div class="ice-seg" style="width:${infPct}%;background:#2d5a3d;">${infPct>6?infPct+'%':''}</div>
+    <div class="ice-seg" style="width:${projPct}%;background:#b45309;border-radius:0 6px 6px 0;">${projPct>5?projPct+'%':''}</div>`;
+
+  goAct(3);
+}
+
+// ─── INIT ───────────────────────────────
+updEst();
+</script>
+</body>
+</html>
